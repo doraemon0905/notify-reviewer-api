@@ -61,7 +61,7 @@ async def root(slack_command: SlackCommand):
 
     if re.match(r"^https://github.com/[^/]+/[^/]+/pull/\d+$", pr_url):
         logger.info("Processing Pull Request...")
-        get_pr_details(pr_url)
+        get_pr_details(pr_url, slack_command.user_id)
         logger.info("Notification sent to Slack!")
         response_text = f"Hi {slack_command.user_name}, your review request have been submitted."
     else:
@@ -111,8 +111,7 @@ def find_user_id_by_email(email):
         logger.error(f"Error looking up user: {e}")
 
 
-def send_to_slack(title, reviewers, pr_url, email, usergroup_map):
-    user_id = find_user_id_by_email(email) if email else ""
+def send_to_slack(title, reviewers, pr_url, user_id, usergroup_map):
     formatted_reviewers = convert_reviewers_to_subteam_format(reviewers, usergroup_map)
     message = f"Hi team, please help {'<@' + user_id + '> ' if user_id else ''}review this PR {pr_url} \nSummary: {title} \ncc {formatted_reviewers}\nThank you! :pepe_love:"
 
@@ -193,7 +192,7 @@ def contains_reviewer(reviewers, reviewer_to_check):
     return reviewer_to_check in reviewers
 
 
-def get_pr_details(pr_url):
+def get_pr_details(pr_url, user_id):
     match = re.match(r"https://github.com/([^/]+)/([^/]+)/pull/(\d+)", pr_url)
     if not match:
         raise ValueError("Invalid GitHub Pull Request URL format.")
@@ -213,11 +212,9 @@ def get_pr_details(pr_url):
     if not contains_reviewer(reviewers, "@squad-eternals"):
         reviewers += ", @squad-eternals"
 
-    user_login = response["user"]["login"]
-    email = get_user_email(user_login)
     usergroup_map = get_slack_usergroups()
 
-    send_to_slack(title, reviewers, pr_url, email, usergroup_map)
+    send_to_slack(title, reviewers, pr_url, user_id, usergroup_map)
 
 
 def get_slack_usergroups():
