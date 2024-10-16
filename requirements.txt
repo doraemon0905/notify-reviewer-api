@@ -1,0 +1,6 @@
+fastapi
+redis
+types-redis
+uvicorn
+slack-sdk
+python-dotenv
