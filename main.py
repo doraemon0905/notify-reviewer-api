@@ -1,6 +1,7 @@
 # main.py
 
 from fastapi import FastAPI, Request
+from pydantic import BaseModel
 import os
 import re
 import requests
@@ -9,6 +10,7 @@ import logging
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from dotenv import load_dotenv
+import validators
 
 # Constants
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -28,6 +30,31 @@ load_dotenv()
 
 app = FastAPI()
 
+class SlackCommand(BaseModel):
+    token: str
+    team_id: str
+    team_domain: str
+    channel_id: str
+    channel_name: str
+    user_id: str
+    user_name: str
+    command: str
+    text: str
+    response_url: str
+    trigger_id: str
+
 @app.post("/")
-async def root(request: Request):
-    return {"received_request_body": await request.json()}
+async def root(slack_command: SlackCommand):
+    print(validators.url(slack_command.text))
+    if not validators.url(slack_command.text):
+        return {
+            "response_type": "ephemeral",
+            "text": "Please provide a valid URL"
+        }
+
+    response_text = f"Hello {slack_command.user_name}, this is a private message just for you!"
+
+    return {
+        "response_type": "ephemeral",  # Message is only visible to the user
+        "text": response_text
+    }

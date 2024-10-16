@@ -4,3 +4,5 @@ types-redis
 uvicorn
 slack-sdk
 python-dotenv
+requests
+validators
