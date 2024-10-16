@@ -11,14 +11,19 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from dotenv import load_dotenv
 import validators
-
+from pydantic_settings import BaseSettings
 # Constants
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHANNEL_ID = os.getenv("CHANNEL_ID")
+class Settings(BaseSettings):
+    github_token: str = ""
+    bot_token: str = ""
+    channel_id: str = ""
+    
+    class Config:
+        env_file = ".env"
 
+settings = Settings()
 # Initialize Slack client and logger
-client = WebClient(token=BOT_TOKEN)
+client = WebClient(token=settings.bot_token)
 logger = logging.getLogger(__name__)
 
 SPECIFIC_CASES = {
@@ -69,17 +74,17 @@ async def root(slack_command: SlackCommand):
     }
 
 def validate_env_vars():
-    if not GITHUB_TOKEN:
+    if not settings.github_token:
         raise ValueError("Invalid GITHUB_TOKEN.")
-    if not BOT_TOKEN:
+    if not settings.bot_token:
         raise ValueError("Invalid BOT_TOKEN.")
-    if not CHANNEL_ID:
+    if not settings.channel_id:
         raise ValueError("Invalid CHANNEL_ID.")
 
 
 def make_github_request(url):
     headers = {
-        "Authorization": f"token {GITHUB_TOKEN}",
+        "Authorization": f"token {settings.github_token}",
         "Accept": "application/vnd.github.v3+json",
     }
     response = requests.get(url, headers=headers)
@@ -112,7 +117,7 @@ def send_to_slack(title, reviewers, pr_url, email, usergroup_map):
     message = f"Hi team, please help {'<@' + user_id + '> ' if user_id else ''}review this PR {pr_url} \nSummary: {title} \ncc {formatted_reviewers}\nThank you! :pepe_love:"
 
     try:
-        return client.chat_postMessage(channel=CHANNEL_ID, text=message)
+        return client.chat_postMessage(channel=settings.channel_id, text=message)
     except SlackApiError as e:
         logger.error(f"Error posting message: {e}")
 
@@ -207,14 +212,6 @@ def get_pr_details(pr_url):
 
     if not contains_reviewer(reviewers, "@squad-eternals"):
         reviewers += ", @squad-eternals"
-
-    external_reviewers = input(
-        f"We already requested review to {reviewers}. Do you want to add any external reviewers (comma-separated)? "
-    )
-    if external_reviewers:
-        reviewers += ", " + ", ".join(
-            [f"@{reviewer.strip()}" for reviewer in external_reviewers.split(",")]
-        )
 
     user_login = response["user"]["login"]
     email = get_user_email(user_login)

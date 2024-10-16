@@ -6,3 +6,4 @@ slack-sdk
 python-dotenv
 requests
 validators
+pydantic_settings
