@@ -91,26 +91,25 @@ async def root(token: str = Form(...),
     response_url: str = Form(...),
     trigger_id: str = Form(...)
 ):
-    if not validators.url(text):
+    pr_url, channel_id = text.split()
+    if not validators.url(pr_url):
         return {
             "response_type": "ephemeral",
-            "text": "Please provide a valid URL"
+            "text": ":alert: Please provide a valid URL"
         }
-
     validate_env_vars()
-
     try:
-        if re.match(r"^https://github.com/[^/]+/[^/]+/pull/\d+$", text):
+        if re.match(r"^https://github.com/[^/]+/[^/]+/pull/\d+$", pr_url):
             logger.info("Processing Pull Request...")
-            get_pr_details(text, user_id)
+            get_pr_details(pr_url, user_id, channel_id)
             logger.info("Notification sent to Slack!")
             response_text = f"Hi {'<@' + user_id + '>'}, your review request have been submitted."
         else:
-            response_text = f"Invalid Pull Request URL. Please provide a valid GitHub PR URL."
+            response_text = f":alert: Invalid Pull Request URL. Please provide a valid GitHub PR URL."
     except Exception as e:
         return {
             "response_type": "ephemeral",  # Message is only visible to the user
-            "text": str(e)
+            "text": ":alert: " + str(e)
         }
 
     return {
@@ -156,12 +155,12 @@ def find_user_id_by_email(email):
         logger.error(f"Error looking up user: {e}")
 
 
-def send_to_slack(title, reviewers, pr_url, user_id, usergroup_map):
+def send_to_slack(title, reviewers, pr_url, user_id, usergroup_map, channel_id):
     formatted_reviewers = convert_reviewers_to_subteam_format(reviewers, usergroup_map)
     message = f"Hi team, please help {'<@' + user_id + '> ' if user_id else ''}review this PR {pr_url} \nSummary: {title} \ncc {formatted_reviewers}\nThank you! :pepe_love:"
 
     try:
-        return client.chat_postMessage(channel=settings.channel_id, text=message)
+        return client.chat_postMessage(channel=channel_id, text=message)
     except SlackApiError as e:
         logger.error(f"Error posting message: {e}")
 
@@ -237,7 +236,7 @@ def contains_reviewer(reviewers, reviewer_to_check):
     return reviewer_to_check in reviewers
 
 
-def get_pr_details(pr_url, user_id):
+def get_pr_details(pr_url, user_id, channel_id):
     match = re.match(r"https://github.com/([^/]+)/([^/]+)/pull/(\d+)", pr_url)
     if not match:
         raise ValueError("Invalid GitHub Pull Request URL format.")
@@ -253,7 +252,10 @@ def get_pr_details(pr_url, user_id):
 
     usergroup_map = get_slack_usergroups()
 
-    send_to_slack(title, reviewers, pr_url, user_id, usergroup_map)
+    if not channel_id:
+        channel_id = settings.channel_id
+
+    send_to_slack(title, reviewers, pr_url, user_id, usergroup_map, channel_id)
 
 def get_reviewers(pr_url):
     response = make_github_request(pr_url)
