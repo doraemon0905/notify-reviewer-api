@@ -102,7 +102,7 @@ async def root(token: str = Form(...),
         logger.info("Processing Pull Request...")
         get_pr_details(text, user_id)
         logger.info("Notification sent to Slack!")
-        response_text = f"Hi {user_name}, your review request have been submitted."
+        response_text = f"Hi {'<@' + user_id + '>'}, your review request have been submitted."
     else:
         response_text = f"Invalid Pull Request URL. Please provide a valid GitHub PR URL."
     
