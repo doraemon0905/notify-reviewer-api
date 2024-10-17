@@ -1,6 +1,6 @@
 # main.py
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Form
 from pydantic import BaseModel
 import os
 import re
@@ -36,34 +36,44 @@ load_dotenv()
 app = FastAPI()
 
 class SlackCommand(BaseModel):
-    token: str
-    team_id: str
-    team_domain: str
-    channel_id: str
-    channel_name: str
-    user_id: str
-    user_name: str
-    command: str
-    text: str
-    response_url: str
-    trigger_id: str
+    token: str = Form(...)
+    team_id: str = Form(...)
+    team_domain: str = Form(...)
+    channel_id: str = Form(...)
+    channel_name: str = Form(...)
+    user_id: str = Form(...)
+    user_name: str = Form(...)
+    command: str = Form(...)
+    text: str = Form(...)
+    response_url: str = Form(...)
+    trigger_id: str = Form(...)
 
 @app.post("/")
-async def root(slack_command: SlackCommand):
-    if not validators.url(slack_command.text):
+async def root(token: str = Form(...),
+    team_id: str = Form(...),
+    team_domain: str = Form(...),
+    channel_id: str = Form(...),
+    channel_name: str = Form(...),
+    user_id: str = Form(...),
+    user_name: str = Form(...),
+    command: str = Form(...),
+    text: str = Form(...),
+    response_url: str = Form(...),
+    trigger_id: str = Form(...)
+):
+    if not validators.url(text):
         return {
             "response_type": "ephemeral",
             "text": "Please provide a valid URL"
         }
 
     validate_env_vars()
-    pr_url = slack_command.text
 
-    if re.match(r"^https://github.com/[^/]+/[^/]+/pull/\d+$", pr_url):
+    if re.match(r"^https://github.com/[^/]+/[^/]+/pull/\d+$", text):
         logger.info("Processing Pull Request...")
-        get_pr_details(pr_url, slack_command.user_id)
+        get_pr_details(text, user_id)
         logger.info("Notification sent to Slack!")
-        response_text = f"Hi {slack_command.user_name}, your review request have been submitted."
+        response_text = f"Hi {user_name}, your review request have been submitted."
     else:
         response_text = f"Invalid Pull Request URL. Please provide a valid GitHub PR URL."
     

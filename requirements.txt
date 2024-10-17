@@ -7,3 +7,4 @@ python-dotenv
 requests
 validators
 pydantic_settings
+python-multipart
