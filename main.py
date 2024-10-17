@@ -11,7 +11,6 @@ from slack_sdk.errors import SlackApiError
 from dotenv import load_dotenv
 import validators
 from pydantic_settings import BaseSettings
-import logging
 
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
 
@@ -126,14 +125,6 @@ def convert_reviewers_to_subteam_format(reviewers, usergroup_map):
     return " ".join(subteams)
 
 
-def find_user_id_by_email(email):
-    try:
-        result = client.users_lookupByEmail(email=email)
-        return result["user"]["id"]
-    except SlackApiError as e:
-        logger.error(f"Error looking up user: {e}")
-
-
 def send_to_slack(title, reviewers, pr_url, user_id, usergroup_map, channel_id):
     formatted_reviewers = convert_reviewers_to_subteam_format(reviewers, usergroup_map)
     message = f"Hi team, please help {'<@' + user_id + '> ' if user_id else ''}review this PR {pr_url} \nSummary: {title} \ncc {formatted_reviewers}\nThank you! :pepe_love:"
@@ -142,12 +133,6 @@ def send_to_slack(title, reviewers, pr_url, user_id, usergroup_map, channel_id):
         return client.chat_postMessage(channel=channel_id, text=message)
     except SlackApiError as e:
         logger.error(f"Error posting message: {e}")
-
-
-def get_user_email(user_login):
-    user_url = f"https://api.github.com/users/{user_login}"
-    user_response = make_github_request(user_url)
-    return user_response.get("email", "No public email")
 
 
 def contains_reviewer(reviewers, reviewer_to_check):
