@@ -15,18 +15,13 @@ class SendMessage:
              raise ValueError("Please provide a valid URL")
 
         if re.match(r"^https://github.com/[^/]+/[^/]+/pull/\d+$", pr_url):
-            organization, repo, pr_number = match.groups()
-            pr_api_url = f"https://api.github.com/repos/{organization}/{repo}/pulls/{pr_number}"
-            response = make_github_request(pr_api_url)
-            state = response.get("state", "unknown")
-            if state != "open":
-                raise ValueError("Pull Request is not open.")
-            
-            title = response.get("title", "No title")
+            return self._execute_send_message(pr_url, channel_id)
         else:
             raise ValueError("Invalid Pull Request URL. Please provide a valid GitHub PR URL.")
 
     def _execute_send_message(self, pr_url, channel_id):
         github = GitHub()
+        match = re.match(r"https://github.com/([^/]+)/([^/]+)/pull/(\d+)", pr_url)
+        organization, repo, pr_number = match.groups()
         pr_details = github.get_pr_details(pr_url)
         pr_reviewers = github.get_pr_reviewers(pr_url)
