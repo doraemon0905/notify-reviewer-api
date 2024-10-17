@@ -16,6 +16,7 @@ from pydantic_settings import BaseSettings
 from starlette.responses import Response
 from datetime import datetime
 import logging
+import json
 
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
 
@@ -240,21 +241,16 @@ def get_pr_details(pr_url, user_id):
     response = make_github_request(pr_api_url)
 
     title = response.get("title", "No title")
-    reviewers = (
-        get_reviewers_ats(organization, repo, pr_number)
-        if repo == "ats"
-        else ", ".join(
-            [f"@{team['name']}" for team in response.get("requested_teams", [])]
-        )
-    )
-
-    if not contains_reviewer(reviewers, "@squad-eternals"):
-        reviewers += ", @squad-eternals"
+    reviewers = get_reviewers(pr_api_url + "/requested_reviewers")
 
     usergroup_map = get_slack_usergroups()
 
     send_to_slack(title, reviewers, pr_url, user_id, usergroup_map)
 
+def get_reviewers(pr_url):
+    response = make_github_request(pr_url)
+    teams = response.get("teams", [])
+    return ", ".join([f"@{team['name']}" for team in teams])
 
 def get_slack_usergroups():
     try:
