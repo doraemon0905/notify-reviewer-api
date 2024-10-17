@@ -1,6 +1,4 @@
 fastapi
-redis
-types-redis
 uvicorn
 slack-sdk
 python-dotenv
@@ -8,4 +6,3 @@ requests
 validators
 pydantic_settings
 python-multipart
-python-json-logger
