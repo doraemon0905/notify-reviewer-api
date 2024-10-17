@@ -8,3 +8,4 @@ requests
 validators
 pydantic_settings
 python-multipart
+python-json-logger
