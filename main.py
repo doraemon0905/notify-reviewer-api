@@ -91,7 +91,13 @@ async def root(token: str = Form(...),
     response_url: str = Form(...),
     trigger_id: str = Form(...)
 ):
-    pr_url, channel_id = text.split()
+    parts = text.split()
+    if len(parts) == 2:
+        pr_url, channel_id = parts
+    elif len(parts) == 1:
+        pr_url = parts[0]
+        channel_id = ""
+
     if not validators.url(pr_url):
         return {
             "response_type": "ephemeral",
@@ -169,67 +175,6 @@ def get_user_email(user_login):
     user_url = f"https://api.github.com/users/{user_login}"
     user_response = make_github_request(user_url)
     return user_response.get("email", "No public email")
-
-
-def get_changed_files(repo_owner, repo_name, pr_number):
-    pr_files_url = (
-        f"https://api.github.com/repos/{repo_owner}/{repo_name}/pulls/{pr_number}/files"
-    )
-    return make_github_request(pr_files_url)
-
-
-def get_codeowners(repo_owner, repo_name):
-    codeowners_url = (
-        f"https://api.github.com/repos/{repo_owner}/{repo_name}/contents/CODEOWNERS"
-    )
-    response = make_github_request(codeowners_url)
-    content = response.get("content", "")
-    return base64.b64decode(content).decode("utf-8") if content else ""
-
-
-def parse_codeowners(content):
-    codeowners = {}
-    for line in content.splitlines():
-        if line and not line.startswith("#"):
-            parts = line.split()
-            if len(parts) >= 2:
-                file_path = parts[0]
-                owners = [owner.replace("@Thinkei/", "") for owner in parts[1:]]
-                codeowners[file_path] = owners
-    return codeowners
-
-
-def match_files_to_owners(changed_files, codeowners):
-    file_owners = {}
-    for file_info in changed_files:
-        filename = file_info["filename"]
-        if filename == "CODEOWNERS":
-            file_owners[filename] = ["squad-eternals"]
-        elif filename.startswith("db/"):
-            file_owners[filename] = ["squad-alchemist"]
-        else:
-            if filename in codeowners:
-                file_owners[filename] = codeowners[filename]
-            else:
-                folder_matched = False
-                for path, owners in codeowners.items():
-                    if path.endswith("/") and filename.startswith(path):
-                        file_owners[filename] = owners
-                        folder_matched = True
-                        break
-                if not folder_matched:
-                    continue
-    return file_owners
-
-
-def get_reviewers_ats(repo_owner, repo_name, pr_number):
-    changed_files = get_changed_files(repo_owner, repo_name, pr_number)
-    codeowners_content = get_codeowners(repo_owner, repo_name)
-    codeowners = parse_codeowners(codeowners_content)
-    file_owners = match_files_to_owners(changed_files, codeowners)
-
-    pr_owners = {f"@{owner}" for owners in file_owners.values() for owner in owners}
-    return ", ".join(pr_owners)
 
 
 def contains_reviewer(reviewers, reviewer_to_check):
