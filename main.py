@@ -4,14 +4,19 @@ from fastapi import FastAPI, Form, Request
 from pydantic import BaseModel
 import logging.config
 import logging
+import sys
 import re
 import requests
+import base64
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from dotenv import load_dotenv
 import validators
 from pydantic_settings import BaseSettings
+from starlette.responses import Response
+from datetime import datetime
 import logging
+import json
 
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
 
@@ -50,6 +55,28 @@ class SlackCommand(BaseModel):
     text: str = Form(...)
     response_url: str = Form(...)
     trigger_id: str = Form(...)
+
+@app.middleware("http")
+async def log_traffic(request: Request, call_next):
+    start_time = datetime.now()
+    request_body = await request.body()
+    response = await call_next(request)
+    process_time = (datetime.now() - start_time).total_seconds()
+    client_host = request.client.host
+    log_params = {
+        "request_method": request.method,
+        "request_url": str(request.url),
+        "request_size": request.headers.get("content-length"),
+        "request_headers": dict(request.headers),
+        "request_body": request_body.decode("utf-8"),
+        "response_status": response.status_code,
+        "response_size": response.headers.get("content-length"),
+        "response_headers": dict(response.headers),
+        "process_time": process_time,
+        "client_host": client_host
+    }
+    logger.info(log_params)
+    return response
 
 @app.post("/")
 async def root(token: str = Form(...),
