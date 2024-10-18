@@ -92,12 +92,11 @@ async def root(token: str = Form(...),
     response_url: str = Form(...),
     trigger_id: str = Form(...)
 ):
-    parts = text.split()
-    if len(parts) == 2:
-        pr_url, channel_id = parts
-    elif len(parts) == 1:
-        pr_url = parts[0]
-        channel_id = ""
+    logger.info(f"Text: {text}")
+    pr_url_pattern = r"https://github.com/[^/]+/[^/]+/pull/\d+"
+    pr_url = re.search(pr_url_pattern, text)
+    pr_url = pr_url.group(0) if pr_url else None
+    logger.info(f"PR URL: {pr_url}")
 
     if not validators.url(pr_url):
         return {
@@ -108,7 +107,7 @@ async def root(token: str = Form(...),
     try:
         if re.match(r"^https://github.com/[^/]+/[^/]+/pull/\d+$", pr_url):
             logger.info("Processing Pull Request...")
-            get_pr_details(pr_url, user_id, channel_id)
+            get_pr_details(pr_url, user_id)
             logger.info("Notification sent to Slack!")
             response_text = f"Hi {'<@' + user_id + '>'}, your review request have been submitted."
         else:
@@ -182,7 +181,7 @@ def contains_reviewer(reviewers, reviewer_to_check):
     return reviewer_to_check in reviewers
 
 
-def get_pr_details(pr_url, user_id, channel_id):
+def get_pr_details(pr_url, user_id, channel_id = None):
     match = re.match(r"https://github.com/([^/]+)/([^/]+)/pull/(\d+)", pr_url)
     if not match:
         raise ValueError("Invalid GitHub Pull Request URL format.")
