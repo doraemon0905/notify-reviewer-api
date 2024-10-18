@@ -35,7 +35,8 @@ client = WebClient(token=settings.bot_token)
 logger = logging.getLogger(__name__)
 
 SPECIFIC_CASES = {
-    "@ai-hero-bot": "S06N42PMKEF"  # Example: Slack ID for @ai-hero-bot is hardcoded to "ABC"
+    "@ai-hero-bot": "S06N42PMKEF",  # Example: Slack ID for @ai-hero-bot is hardcoded to "ABC"
+    "@engineering-managers": "S05FPFUQKK6",
 }
 
 # Load environment variables from .env file
