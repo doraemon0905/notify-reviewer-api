@@ -4,13 +4,18 @@ from fastapi import FastAPI, Form, Request
 from pydantic import BaseModel
 import logging.config
 import logging
+import sys
 import re
 import requests
+import base64
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from dotenv import load_dotenv
 import validators
 from pydantic_settings import BaseSettings
+from starlette.responses import Response
+from datetime import datetime
+import json
 
 logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s')
 
@@ -29,7 +34,8 @@ client = WebClient(token=settings.bot_token)
 logger = logging.getLogger(__name__)
 
 SPECIFIC_CASES = {
-    "@ai-hero-bot": "S06N42PMKEF"  # Example: Slack ID for @ai-hero-bot is hardcoded to "ABC"
+    "@ai-hero-bot": "S06N42PMKEF",  # Example: Slack ID for @ai-hero-bot is hardcoded to "ABC"
+    "@engineering-managers": "S05FPFUQKK6",
 }
 
 # Load environment variables from .env file
@@ -50,6 +56,28 @@ class SlackCommand(BaseModel):
     response_url: str = Form(...)
     trigger_id: str = Form(...)
 
+@app.middleware("http")
+async def log_traffic(request: Request, call_next):
+    start_time = datetime.now()
+    request_body = await request.body()
+    response = await call_next(request)
+    process_time = (datetime.now() - start_time).total_seconds()
+    client_host = request.client.host
+    log_params = {
+        "request_method": request.method,
+        "request_url": str(request.url),
+        "request_size": request.headers.get("content-length"),
+        "request_headers": dict(request.headers),
+        "request_body": request_body.decode("utf-8"),
+        "response_status": response.status_code,
+        "response_size": response.headers.get("content-length"),
+        "response_headers": dict(response.headers),
+        "process_time": process_time,
+        "client_host": client_host
+    }
+    logger.info(log_params)
+    return response
+
 @app.post("/")
 async def root(token: str = Form(...),
     team_id: str = Form(...),
@@ -63,12 +91,11 @@ async def root(token: str = Form(...),
     response_url: str = Form(...),
     trigger_id: str = Form(...)
 ):
-    parts = text.split()
-    if len(parts) == 2:
-        pr_url, channel_id = parts
-    elif len(parts) == 1:
-        pr_url = parts[0]
-        channel_id = ""
+    logger.info(f"Text: {text}")
+    pr_url_pattern = r"https://github.com/[^/]+/[^/]+/pull/\d+"
+    pr_url = re.search(pr_url_pattern, text)
+    pr_url = pr_url.group(0) if pr_url else None
+    logger.info(f"PR URL: {pr_url}")
 
     if not validators.url(pr_url):
         return {
@@ -79,7 +106,7 @@ async def root(token: str = Form(...),
     try:
         if re.match(r"^https://github.com/[^/]+/[^/]+/pull/\d+$", pr_url):
             logger.info("Processing Pull Request...")
-            get_pr_details(pr_url, user_id, channel_id)
+            get_pr_details(pr_url, user_id)
             logger.info("Notification sent to Slack!")
             response_text = f"Hi {'<@' + user_id + '>'}, your review request have been submitted."
         else:
@@ -139,7 +166,7 @@ def contains_reviewer(reviewers, reviewer_to_check):
     return reviewer_to_check in reviewers
 
 
-def get_pr_details(pr_url, user_id, channel_id):
+def get_pr_details(pr_url, user_id, channel_id = None):
     match = re.match(r"https://github.com/([^/]+)/([^/]+)/pull/(\d+)", pr_url)
     if not match:
         raise ValueError("Invalid GitHub Pull Request URL format.")
