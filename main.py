@@ -11,7 +11,7 @@ import time
 from app.config.settings import settings
 
 logging.basicConfig(
-    filename='app.log', level=logging.INFO, format='%(asctime)s %(message)s'
+    filename="app.log", level=logging.INFO, format="%(asctime)s %(message)s"
 )
 logger = logging.getLogger(__name__)
 app = FastAPI(title="Slack bot request review", debug=True)
@@ -46,14 +46,13 @@ async def verify_slack_request(request: Request, call_next):
     slack_signature = request.headers.get("X-Slack-Signature")
     slack_request_timestamp = request.headers.get("X-Slack-Request-Timestamp")
     
+
     if not settings.slack_signing_secret:
         response = await call_next(request)
         return response
 
     if not slack_signature or not slack_request_timestamp:
-        raise HTTPException(
-            status_code=400, detail="Missing Slack signature or timestamp"
-        )
+        raise HTTPException(status_code=400, detail="Missing Slack signature or timestamp")
 
     # Prevent replay attacks by checking if the request timestamp is more than 5 minutes old
     if abs(time.time() - int(slack_request_timestamp)) > 60 * 5:
@@ -68,14 +67,12 @@ async def verify_slack_request(request: Request, call_next):
         + hmac.new(
             settings.slack_signing_secret.encode("utf-8"),
             sig_basestring.encode("utf-8"),
-            hashlib.sha256
+            hashlib.sha256,
         ).hexdigest()
     )
 
     if not hmac.compare_digest(my_signature, slack_signature):
-        raise HTTPException(
-            status_code=400, detail="Invalid Slack signature"
-        )
+        raise HTTPException(status_code=400, detail="Invalid Slack signature")
 
     response = await call_next(request)
     return response

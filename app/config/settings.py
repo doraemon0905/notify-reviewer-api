@@ -11,7 +11,6 @@ class Settings(BaseSettings):
     channel_id: str = ""
     slack_signing_secret: str = ""
     
-    
     class Config:
         env_file = ".env"
 
