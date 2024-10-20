@@ -1,7 +1,5 @@
-import requests
 import logging
-from slack_sdk.aiohttp import AsyncWebClient
-from slack_sdk.errors import SlackApiError
+from slack_sdk.web.async_client import AsyncWebClient
 logger = logging.getLogger(__name__)
 
 class Slack:
