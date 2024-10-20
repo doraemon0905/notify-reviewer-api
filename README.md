@@ -12,7 +12,10 @@ https://employmenthero.slack.com/marketplace/A07R7MQ31KR-employment-hero-code-re
 You can use the bot from every channel on workspace of Employment Hero.
 
 ```
-/review ask @squad-eternals to review PR https://github.com/Thinkei/employment-hero/pull/46731 
+/review ask @squad-eternals to review PR https://github.com/Thinkei/employment-hero/pull/46731
+/review https://github.com/Thinkei/employment-hero/pull/46731 @squad-eternals #eh-eng-code-review
+/review https://github.com/Thinkei/employment-hero/pull/46731 @squad-eternals
+/review https://github.com/Thinkei/employment-hero/pull/46731 #eh-eng-code-review
 ```
 
 It will mention the squad eternals or another Slack user you've indicated on command to review your PR
