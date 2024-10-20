@@ -22,6 +22,9 @@ class SendMessage:
         user_ids, channel_ids, pr_url = self._parse_slack_message()
         if not validators.url(pr_url):
              raise ValueError("Please provide a valid URL")
+        
+        if self.user_id in user_ids:
+            user_ids.remove(self.user_id)
 
         if re.match(r"^https://github.com/[^/]+/[^/]+/pull/\d+$", pr_url):
             return self._execute_send_message(channel_ids, user_ids, pr_url)
