@@ -51,9 +51,6 @@ class SendMessage:
         return user_ids, channel_ids, pr_url, group_ids
 
     def valid_pr_url(self, pr_detail):
-        state = pr_detail.get("state")
-        if state != "open":
-            raise ValueError("Pull request state is not valid.")
         title = pr_detail.get("title")
         if not title:
             raise ValueError("Pull request do not have a title.")
