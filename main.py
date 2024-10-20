@@ -41,6 +41,11 @@ async def log_traffic(request: Request, call_next):
 async def verify_slack_request(request: Request, call_next):
     slack_signature = request.headers.get("X-Slack-Signature")
     slack_request_timestamp = request.headers.get("X-Slack-Request-Timestamp")
+    
+    
+    if not settings.slack_signing_secret:
+        response = await call_next(request)
+        return response
 
     if not slack_signature or not slack_request_timestamp:
         raise HTTPException(status_code=400, detail="Missing Slack signature or timestamp")
