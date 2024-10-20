@@ -55,7 +55,7 @@ async def verify_slack_request(request: Request, call_next):
         )
     verifier = SignatureVerifier(signing_secret=settings.slack_signing_secret)
     request_body = await request.body()
-   
+
     if not verifier.is_valid(
         body=request_body, timestamp=slack_request_timestamp, signature=slack_signature
     ):
