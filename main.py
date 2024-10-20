@@ -52,7 +52,7 @@ async def verify_slack_request(request: Request, call_next):
     request_body = await request.body()
     sig_basestring = f"v0:{slack_request_timestamp}:{request_body.decode('utf-8')}"
     my_signature = "v0=" + hmac.new(
-        settings.SLACK_SIGNING_SECRET.encode("utf-8"),
+        settings.slack_signing_secret.encode("utf-8"),
         sig_basestring.encode("utf-8"),
         hashlib.sha256
     ).hexdigest()
