@@ -5,14 +5,13 @@ import logging.config
 import logging
 from datetime import datetime
 from app.routes.api import api_router
-from app.middlewares.verify_slack_request import VerifySlackRequest
+
 
 logging.basicConfig(
     filename="app.log", level=logging.INFO, format="%(asctime)s %(message)s"
 )
 logger = logging.getLogger(__name__)
 app = FastAPI(title="Slack bot request review", debug=True)
-app.add_middleware(VerifySlackRequest)
 app.include_router(api_router)
 
 
