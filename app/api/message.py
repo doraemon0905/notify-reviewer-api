@@ -3,8 +3,8 @@ from app.serivces.send_message import SendMessage
 
 router = APIRouter()
 
-@router.post( "/")
-def conversation(
+@router.post("/")
+async def conversation(
     token: str = Form(...),
     team_id: str = Form(...),
     team_domain: str = Form(...),
@@ -17,10 +17,9 @@ def conversation(
     response_url: str = Form(...),
     trigger_id: str = Form(...)
 ):
-     
     try:
         message_service = SendMessage(user_id, text)
-        message_service.send_message()
+        await message_service.send_message()
         return {
             "response_type": "ephemeral",
             "text": ":white_check_mark: Your request has been submitted successfully."
@@ -30,4 +29,3 @@ def conversation(
             "response_type": "ephemeral",
             "text": ":alert: " + str(e)
         }
-     
