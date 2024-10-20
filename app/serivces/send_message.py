@@ -19,12 +19,12 @@ class SendMessage:
         self.user_id = user_id
 
     def send_message(self):
-        user_ids, channel_id, pr_url = self._parse_slack_message()
+        user_ids, channel_ids, pr_url = self._parse_slack_message()
         if not validators.url(pr_url):
              raise ValueError("Please provide a valid URL")
 
         if re.match(r"^https://github.com/[^/]+/[^/]+/pull/\d+$", pr_url):
-            return self._execute_send_message(channel_id, user_ids, pr_url)
+            return self._execute_send_message(channel_ids, user_ids, pr_url)
         else:
             raise ValueError("Invalid Pull Request URL. Please provide a valid GitHub PR URL.")
         
@@ -35,15 +35,14 @@ class SendMessage:
 
         # Regular expression to find channel ID
         channel_id_pattern = r"<#([A-Z0-9]+)\|"
-        channel_id_match = re.search(channel_id_pattern, self.message)
-        channel_id = channel_id_match.group(1) if channel_id_match else None
+        channel_ids = re.findall(channel_id_pattern, self.message)
 
         # Regular expression to find GitHub pull request URL
         pr_url_pattern = r"https://github.com/[^/]+/[^/]+/pull/\d+"
         pr_url_match = re.search(pr_url_pattern, self.message)
         pr_url = pr_url_match.group(0) if pr_url_match else None
 
-        return user_ids, channel_id, pr_url
+        return user_ids, channel_ids, pr_url
 
     def valid_pr_url(self, pr_detail):
         state = pr_detail.get("state")
@@ -60,7 +59,13 @@ class SendMessage:
             subteams.append(f"<!subteam^{external_id}>" if external_id else reviewer)
         return " ".join(subteams)
     
-    def _execute_send_message(self, channel_id, user_ids, pr_url):
+    def convert_reviewers_user_format(self, user_ids):
+        subteams = []
+        for reviewer in user_ids:
+            subteams.append(f"<@{reviewer}>")
+        return " ".join(subteams)
+    
+    def _execute_send_message(self, channel_ids, user_ids, pr_url):
         match = re.match(r"https://github.com/([^/]+)/([^/]+)/pull/(\d+)", pr_url)
         organization, repo, pr_number = match.groups()
         github = GitHub(settings.github_token, organization, repo, pr_number)
@@ -68,14 +73,16 @@ class SendMessage:
         pr_reviewers = github.get_pr_reviewers()
         self.valid_pr_url(pr_detail)
 
-        if not channel_id:
-            channel_id = [settings.channel_id]
-
-        slack = Slack(settings.bot_token, channel_id)
+        if not channel_ids:
+            channel_ids = [settings.channel_id]
+        slack = Slack(settings.bot_token, channel_ids)
 
         usergroup_map = slack.get_slack_usergroups()
-        reviewers = self.convert_reviewers_to_subteam_format(pr_reviewers, usergroup_map)
-
+        if user_ids:
+            reviewers = self.convert_reviewers_user_format(user_ids)
+        else:
+            reviewers = self.convert_reviewers_to_subteam_format(pr_reviewers, usergroup_map)
+        
         message = ReviewMessageDecorator(
             review_message = {
                 "id": pr_number,
@@ -83,6 +90,7 @@ class SendMessage:
                 "pr_url": pr_url,
                 "title": pr_detail.get("title"),
                 "formatted_reviewers": reviewers,
+                "user_ids": user_ids,
             }
         )
 
