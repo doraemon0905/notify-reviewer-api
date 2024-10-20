@@ -19,7 +19,7 @@ async def conversation(
 ):
     try:
         message_service = SendMessage(user_id, text)
-        await message_service.send_message()
+        await message_service.send()
         return {
             "response_type": "ephemeral",
             "text": ":white_check_mark: Your request has been submitted successfully."

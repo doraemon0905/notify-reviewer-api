@@ -18,7 +18,7 @@ class SendMessage:
         self.message = message
         self.user_id = user_id
 
-    async def send_message(self):
+    async def send(self):
         user_ids, channel_ids, pr_url, group_ids = await self._parse_slack_message()
         if not validators.url(pr_url):
              raise ValueError("Please provide a valid URL")
