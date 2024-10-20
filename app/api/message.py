@@ -25,13 +25,12 @@ async def conversation(
         await message_service.send()
         return ConversationResponse(
             response_type="ephemeral",
-            text=":white_check_mark: Your request has been submitted successfully."
+            text=":white_check_mark: Your request has been submitted successfully.",
         )
     except Exception as e:
         return JSONResponse(
             status_code=400,
             content=ConversationResponse(
-                response_type="ephemeral",
-                text=":alert: " + str(e)
-            ).model_dump()
+                response_type="ephemeral", text=":alert: " + str(e)
+            ).model_dump(),
         )
