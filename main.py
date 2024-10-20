@@ -57,7 +57,7 @@ async def verify_slack_request(request: Request, call_next):
     request_body = await request.body()
    
     if not verifier.is_valid(
-        body=request_body,timestamp=slack_request_timestamp,signature=slack_signature
+        body=request_body, timestamp=slack_request_timestamp, signature=slack_signature
     ):
         raise HTTPException(status_code=400, detail="Invalid Slack signature")
 
