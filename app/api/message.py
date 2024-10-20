@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Form
+from app.serivces.send_message import SendMessage
 
 router = APIRouter()
 
@@ -16,7 +17,17 @@ def conversation(
     response_url: str = Form(...),
     trigger_id: str = Form(...)
 ):
-     return {
+     
+    try:
+        message_service = SendMessage(user_id, text)
+        message_service.send_message()
+        return {
             "response_type": "ephemeral",
-            "text": ":alert: Please provide a valid URL"
+            "text": ":white_check_mark: Your request has been submitted successfully."
         }
+    except Exception as e:
+        return {
+            "response_type": "ephemeral",
+            "text": ":alert: " + str(e)
+        }
+     

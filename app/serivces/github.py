@@ -34,9 +34,10 @@ class GitHub:
         return f"{self.build_url()}/pulls/{self.pull_request_number}"
     
     def get_pr_details(self):
-        pr_api_url = f"{self.build_pull_request_url()}/pulls/{self.pull_request_number}"
-        return self.make_github_request(pr_api_url)
+        return self.make_github_request(self.build_pull_request_url())
 
     def get_pr_reviewers(self):
         pr_api_url = f"{self.build_pull_request_url()}/requested_reviewers"
-        return self.make_github_request(pr_api_url)
+        response =  self.make_github_request(pr_api_url)
+        teams = response.get("teams", [])
+        return ", ".join([f"@{team['name']}" for team in teams])

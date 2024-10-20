@@ -5,8 +5,9 @@ from slack_sdk.errors import SlackApiError
 logger = logging.getLogger(__name__)
 
 class Slack:
-    def __init__(self, token, channel_id):
+    def __init__(self, token, channel_ids):
         self.token = token
+        self.channel_ids = channel_ids
         self.client = self.init_client()
 
     def init_client(self):
@@ -17,5 +18,6 @@ class Slack:
         result = self.client.usergroups_list()
         return {f"@{ug['handle']}": ug["id"] for ug in result["usergroups"]}
     
-    def chat_post_message(self, channel_id, message):
-        return self.client.chat_postMessage(channel=channel_id, text=message)
+    def chat_post_message(self, message):
+        for channel in self.channel_ids:
+            return self.client.chat_postMessage(channel=channel, text=message)
