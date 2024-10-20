@@ -17,7 +17,6 @@ class Slack:
         result = await self.client.usergroups_list()
         return {f"@{ug['handle']}": ug["id"] for ug in result["usergroups"]}
     
-    
     async def chat_post_message(self, message):
         for channel in self.channel_ids:
             await self.client.chat_postMessage(channel=channel, text=message)
