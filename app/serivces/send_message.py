@@ -52,8 +52,8 @@ class SendMessage:
 
     def valid_pr_url(self, pr_detail):
         state = pr_detail.get("state")
-        if state != "open":
-            raise ValueError("Pull request is not open.")
+        if state != "open" or state != "draft":
+            raise ValueError("Pull request state is not valid.")
         title = pr_detail.get("title")
         if not title:
             raise ValueError("Pull request do not have a title.")
