@@ -7,6 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class VerifySlackRequest(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         slack_signature = request.headers.get("x-slack-signature")
