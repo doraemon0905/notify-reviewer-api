@@ -1,22 +1,22 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Form
 
 router = APIRouter()
 
-@router.get(
-    "/{chat_session_uuid}",
-    response_model=list[schemas.ChatMessage],
-)
+@router.post( "/")
 def conversation(
-    conversation_request: schemas.ConversationRequest,
-    db: Session = Depends(deps.get_db),  # noqa: B008
-) -> ConversationResponse:
-    """Chat conversation."""
-    conversations = Conversations(conversation_request.model_dump(), db).answer()
-    return ConversationResponse(
-        know_answer=conversations.know_answer,
-        document_uuids=conversations.document_uuids,
-        qa_uuid=conversations.qa_uuid,
-        answer=conversations.answer,
-        prompts=conversations.prompts,
-        conversation_type=conversations.service,
-    )
+    token: str = Form(...),
+    team_id: str = Form(...),
+    team_domain: str = Form(...),
+    channel_id: str = Form(...),
+    channel_name: str = Form(...),
+    user_id: str = Form(...),
+    user_name: str = Form(...),
+    command: str = Form(...),
+    text: str = Form(...),
+    response_url: str = Form(...),
+    trigger_id: str = Form(...)
+):
+     return {
+            "response_type": "ephemeral",
+            "text": ":alert: Please provide a valid URL"
+        }
