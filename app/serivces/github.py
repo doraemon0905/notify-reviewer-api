@@ -28,10 +28,10 @@ class GitHub:
         user_url = f"https://api.github.com/users/{user_login}"
         user_response = await self.make_github_request(user_url)
         return user_response.get("email", "No public email")
-    
+
     def build_url(self):
         return f"https://api.github.com/repos/{self.organization}/{self.repo}"
-    
+
     def build_pull_request_url(self):
         return f"{self.build_url()}/pulls/{self.pull_request_number}"
 
