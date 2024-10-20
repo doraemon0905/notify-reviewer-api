@@ -97,7 +97,7 @@ class SendMessage:
         if group_ids:
             reviewers = reviewers + self.convert_group_ids_to_subteam_format(group_ids)
         
-        if not user_ids and not group_ids:
+        if not reviewers:
             reviewers = self.convert_reviewers_to_subteam_format(pr_reviewers, usergroup_map)
 
         message = ReviewMessageDecorator(
