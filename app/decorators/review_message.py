@@ -19,4 +19,3 @@ class ReviewMessageDecorator:
             f"{message_review}"
             "Thank you! :pepe_love:"
         )
-    
