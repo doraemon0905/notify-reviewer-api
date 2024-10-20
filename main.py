@@ -5,7 +5,6 @@ import logging.config
 import logging
 from datetime import datetime
 from app.routes.api import api_router
-import hmac
 from slack_sdk.signature import SignatureVerifier
 from app.config.settings import settings
 
