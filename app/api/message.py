@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Form
 from app.serivces.send_message import SendMessage
+from app.serializers.conversation_response import ConversationResponse
+from fastapi.responses import JSONResponse
 
 router = APIRouter()
 
@@ -21,9 +23,15 @@ async def conversation(
     try:
         message_service = SendMessage(user_id, text)
         await message_service.send()
-        return {
-            "response_type": "ephemeral",
-            "text": ":white_check_mark: Your request has been submitted successfully.",
-        }
+        return ConversationResponse(
+            response_type="ephemeral",
+            text=":white_check_mark: Your request has been submitted successfully."
+        )
     except Exception as e:
-        return {"response_type": "ephemeral", "text": ":alert: " + str(e)}
+        return JSONResponse(
+            status_code=400,
+            content=ConversationResponse(
+                response_type="ephemeral",
+                text=":alert: " + str(e)
+            ).model_dump()
+        )
