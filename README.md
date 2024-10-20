@@ -3,6 +3,12 @@ This is the source for API to create slash command review code on Employment Her
 
 # How to use command?
 
+To send the message, you must first install the app Employment Hero Code Review to your Slack channel.
+
+```
+https://employmenthero.slack.com/marketplace/A07R7MQ31KR-employment-hero-code-review?settings=1&tab=settings
+```
+
 You can use the bot from every channel on workspace of Employment Hero.
 
 ```
