@@ -6,8 +6,7 @@ import logging
 from datetime import datetime
 from app.routes.api import api_router
 import hmac
-import hashlib
-import time
+from slack_sdk.signature import SignatureVerifier
 from app.config.settings import settings
 
 logging.basicConfig(
@@ -43,8 +42,8 @@ async def log_traffic(request: Request, call_next):
 
 @app.middleware("http")
 async def verify_slack_request(request: Request, call_next):
-    slack_signature = request.headers.get("X-Slack-Signature")
-    slack_request_timestamp = request.headers.get("X-Slack-Request-Timestamp")
+    slack_signature = request.headers.get("x-slack-signature")
+    slack_request_timestamp = request.headers.get("x-slack-request-timestamp")
 
     if not settings.slack_signing_secret:
         response = await call_next(request)
@@ -54,23 +53,10 @@ async def verify_slack_request(request: Request, call_next):
         raise HTTPException(
             status_code=400, detail="Missing Slack signature or timestamp"
         )
-
-    # Prevent replay attacks by checking if the request timestamp is more than 5 minutes old
-    if abs(time.time() - int(slack_request_timestamp)) > 60 * 5:
-        raise HTTPException(status_code=400, detail="Request timestamp is too old")
-
+    verifier = SignatureVerifier(signing_secret=settings.slack_signing_secret)
     request_body = await request.body()
-    sig_basestring = f"v0:{slack_request_timestamp}:{request_body.decode('utf-8')}"
-    my_signature = (
-        "v0="
-        + hmac.new(
-            settings.slack_signing_secret.encode("utf-8"),
-            sig_basestring.encode("utf-8"),
-            hashlib.sha256,
-        ).hexdigest()
-    )
-
-    if not hmac.compare_digest(my_signature, slack_signature):
+   
+    if not verifier.is_valid(body=request_body,timestamp=slack_request_timestamp,signature=slack_signature):
         raise HTTPException(status_code=400, detail="Invalid Slack signature")
 
     response = await call_next(request)
