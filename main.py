@@ -45,19 +45,19 @@ async def log_traffic(request: Request, call_next):
 async def verify_slack_request(request: Request, call_next):
     slack_signature = request.headers.get("X-Slack-Signature")
     slack_request_timestamp = request.headers.get("X-Slack-Request-Timestamp")
-    
+
     if not settings.slack_signing_secret:
         response = await call_next(request)
         return response
 
     if not slack_signature or not slack_request_timestamp:
-        raise HTTPException(status_code=400, detail="Missing Slack signature or timestamp")
+        raise HTTPException(
+            status_code=400, detail="Missing Slack signature or timestamp"
+        )
 
     # Prevent replay attacks by checking if the request timestamp is more than 5 minutes old
     if abs(time.time() - int(slack_request_timestamp)) > 60 * 5:
-        raise HTTPException(
-            status_code=400, detail="Request timestamp is too old"
-        )
+        raise HTTPException(status_code=400, detail="Request timestamp is too old")
 
     request_body = await request.body()
     sig_basestring = f"v0:{slack_request_timestamp}:{request_body.decode('utf-8')}"

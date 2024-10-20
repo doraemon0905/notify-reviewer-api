@@ -35,7 +35,8 @@ class SendMessage:
             raise ValueError(
                 "Invalid Pull Request URL. Please provide a valid GitHub PR URL."
             )
-        
+
+
     async def _parse_slack_message(self):
         # Regular expression to find user IDs
         user_id_pattern = r"<@([A-Z0-9]+)\|"
@@ -75,7 +76,6 @@ class SendMessage:
             subteams.append(f"<!subteam^{external_id}>" if external_id else reviewer)
         return " ".join(subteams)
     
-
     def convert_reviewers_user_format(self, user_ids):
         subteams = []
         for reviewer in user_ids:
@@ -102,7 +102,7 @@ class SendMessage:
 
         if group_ids:
             reviewers = reviewers + self.convert_group_ids_to_subteam_format(group_ids)
-        
+
         if not reviewers:
             reviewers = self.convert_reviewers_to_subteam_format(
                 pr_reviewers, usergroup_map
