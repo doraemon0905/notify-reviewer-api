@@ -25,7 +25,9 @@ class VerifySlackRequest(BaseHTTPMiddleware):
         request_body = await request.body()
 
         # Add your verification logic here
-        if not verifier.is_valid_request(request_body, slack_signature, slack_request_timestamp):
+        if not verifier.is_valid_request(
+            request_body, slack_signature, slack_request_timestamp
+        ):
             raise HTTPException(status_code=400, detail="Invalid Slack request")
 
         response = await call_next(request)
