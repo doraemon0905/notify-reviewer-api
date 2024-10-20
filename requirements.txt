@@ -7,3 +7,4 @@ validators
 pydantic_settings
 python-multipart
 aiohttp
+pydantic
