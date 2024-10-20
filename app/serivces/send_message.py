@@ -13,6 +13,7 @@ SPECIFIC_CASES = {
     "@engineering-managers": "S05FPFUQKK6",
 }
 
+
 class SendMessage:
     def __init__(self, user_id: str, message: str):
         self.message = message
@@ -21,15 +22,19 @@ class SendMessage:
     async def send(self):
         user_ids, channel_ids, pr_url, group_ids = await self._parse_slack_message()
         if not validators.url(pr_url):
-             raise ValueError("Please provide a valid URL")
+            raise ValueError("Please provide a valid URL")
         
         if self.user_id in user_ids:
             user_ids.remove(self.user_id)
 
         if re.match(r"^https://github.com/[^/]+/[^/]+/pull/\d+$", pr_url):
-            return await self._execute_send_message(channel_ids, user_ids, pr_url, group_ids)
+            return await self._execute_send_message(
+                channel_ids, user_ids, pr_url, group_ids
+            )
         else:
-            raise ValueError("Invalid Pull Request URL. Please provide a valid GitHub PR URL.")
+            raise ValueError(
+                "Invalid Pull Request URL. Please provide a valid GitHub PR URL."
+            )
         
     async def _parse_slack_message(self):
         # Regular expression to find user IDs
@@ -50,11 +55,13 @@ class SendMessage:
 
         return user_ids, channel_ids, pr_url, group_ids
 
+
     def valid_pr_url(self, pr_detail):
         title = pr_detail.get("title")
         if not title:
             raise ValueError("Pull request do not have a title.")
-        
+    
+
     def convert_group_ids_to_subteam_format(self, group_ids):
         subteams = []
         for group_id in group_ids:
@@ -64,16 +71,20 @@ class SendMessage:
     def convert_reviewers_to_subteam_format(self, reviewers, usergroup_map):
         subteams = []
         for reviewer in reviewers.split(", "):
-            external_id = SPECIFIC_CASES.get(reviewer, usergroup_map.get(reviewer.strip()))
+            external_id = SPECIFIC_CASES.get(
+                reviewer, usergroup_map.get(reviewer.strip())
+            )
             subteams.append(f"<!subteam^{external_id}>" if external_id else reviewer)
         return " ".join(subteams)
     
+
     def convert_reviewers_user_format(self, user_ids):
         subteams = []
         for reviewer in user_ids:
             subteams.append(f"<@{reviewer}>")
         return " ".join(subteams)
     
+
     async def _execute_send_message(self, channel_ids, user_ids, pr_url, group_ids):
         match = re.match(r"https://github.com/([^/]+)/([^/]+)/pull/(\d+)", pr_url)
         organization, repo, pr_number = match.groups()
@@ -87,7 +98,7 @@ class SendMessage:
         slack = Slack(settings.bot_token, channel_ids)
 
         usergroup_map = await slack.get_slack_usergroups()
-        reviewers = ''
+        reviewers = ""
         if user_ids:
             reviewers = self.convert_reviewers_user_format(user_ids)
 
@@ -95,10 +106,12 @@ class SendMessage:
             reviewers = reviewers + self.convert_group_ids_to_subteam_format(group_ids)
         
         if not reviewers:
-            reviewers = self.convert_reviewers_to_subteam_format(pr_reviewers, usergroup_map)
+            reviewers = self.convert_reviewers_to_subteam_format(
+                pr_reviewers, usergroup_map
+            )
 
         message = ReviewMessageDecorator(
-            review_message = {
+            review_message={
                 "id": pr_number,
                 "user_id": self.user_id,
                 "pr_url": pr_url,

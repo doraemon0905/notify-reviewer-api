@@ -15,17 +15,14 @@ async def conversation(
     command: str = Form(...),
     text: str = Form(...),
     response_url: str = Form(...),
-    trigger_id: str = Form(...)
+    trigger_id: str = Form(...),
 ):
     try:
         message_service = SendMessage(user_id, text)
         await message_service.send()
         return {
             "response_type": "ephemeral",
-            "text": ":white_check_mark: Your request has been submitted successfully."
+            "text": ":white_check_mark: Your request has been submitted successfully.",
         }
     except Exception as e:
-        return {
-            "response_type": "ephemeral",
-            "text": ":alert: " + str(e)
-        }
+        return {"response_type": "ephemeral", "text": ":alert: " + str(e)}

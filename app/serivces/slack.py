@@ -1,6 +1,8 @@
 import logging
 from slack_sdk.web.async_client import AsyncWebClient
+
 logger = logging.getLogger(__name__)
+
 
 class Slack:
     def __init__(self, token, channel_ids):
@@ -14,6 +16,7 @@ class Slack:
     async def get_slack_usergroups(self):
         result = await self.client.usergroups_list()
         return {f"@{ug['handle']}": ug["id"] for ug in result["usergroups"]}
+    
     
     async def chat_post_message(self, message):
         for channel in self.channel_ids:
