@@ -1,18 +1,18 @@
 # main.py
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
 import logging.config
 import logging
 from datetime import datetime
 from app.routes.api import api_router
-from slack_sdk.signature import SignatureVerifier
-from app.config.settings import settings
+from app.middlewares.verify_slack_request import VerifySlackRequest
 
 logging.basicConfig(
     filename="app.log", level=logging.INFO, format="%(asctime)s %(message)s"
 )
 logger = logging.getLogger(__name__)
 app = FastAPI(title="Slack bot request review", debug=True)
+app.add_middleware(VerifySlackRequest)
 app.include_router(api_router)
 
 
@@ -36,29 +36,4 @@ async def log_traffic(request: Request, call_next):
         "client_host": client_host,
     }
     logger.info(log_params)
-    return response
-
-
-@app.middleware("http")
-async def verify_slack_request(request: Request, call_next):
-    slack_signature = request.headers.get("x-slack-signature")
-    slack_request_timestamp = request.headers.get("x-slack-request-timestamp")
-
-    if not settings.slack_signing_secret:
-        response = await call_next(request)
-        return response
-
-    if not slack_signature or not slack_request_timestamp:
-        raise HTTPException(
-            status_code=400, detail="Missing Slack signature or timestamp"
-        )
-    verifier = SignatureVerifier(signing_secret=settings.slack_signing_secret)
-    request_body = await request.body()
-
-    if not verifier.is_valid(
-        body=request_body, timestamp=slack_request_timestamp, signature=slack_signature
-    ):
-        raise HTTPException(status_code=400, detail="Invalid Slack signature")
-
-    response = await call_next(request)
     return response
