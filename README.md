@@ -1,6 +1,8 @@
 # Notify Code Review
 This is the source for API to create slash command review code on Employment Hero's Slack.
 
+https://employmenthero.atlassian.net/wiki/spaces/Eternal/pages/3232694793/Bot+Send+message+request+review+bot+Employment+Hero+Code+Review
+
 # How to use command?
 
 To send the message, you must first install the app Employment Hero Code Review to your Slack channel.
