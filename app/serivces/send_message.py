@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 SPECIFIC_CASES = {
     "@ai-hero-bot": "S06N42PMKEF",  # Example: Slack ID for @ai-hero-bot is hardcoded to "ABC"
     "@engineering-managers": "S05FPFUQKK6",
+    "@squad-honey-badgers": "S051NDAUXUY",
 }
 
 
