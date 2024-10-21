@@ -12,7 +12,7 @@ logging.basicConfig(
     filename="app.log", level=logging.INFO, format="%(asctime)s %(message)s"
 )
 logger = logging.getLogger(__name__)
-app = FastAPI(title="Slack bot request review", debug=True)
+app = FastAPI(title="Slack bot request review", debug=False)
 app.include_router(api_router)
 
 
