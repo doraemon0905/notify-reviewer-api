@@ -2,6 +2,7 @@ import contextlib
 
 from app.serivces.sentry_service import SentryService
 
+
 def capture_exception(exception):
     sentry_sdk = SentryService()
     with contextlib.suppress(Exception):
