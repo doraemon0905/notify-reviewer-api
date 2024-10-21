@@ -44,7 +44,7 @@ async def verify_slack_request(request: Request, call_next):
     slack_signature = request.headers.get("x-slack-signature")
     slack_request_timestamp = request.headers.get("x-slack-request-timestamp")
 
-    if not settings.slack_signing_secret:
+    if not settings.slack_signing_secret or not request.url.path.startswith("/conversation"):
         response = await call_next(request)
         return response
 
