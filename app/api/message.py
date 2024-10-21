@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 router = APIRouter()
 
 
-@router.post("/")
+@router.post("/", response_model=ConversationResponse)
 async def conversation(
     token: str = Form(...),
     team_id: str = Form(...),
