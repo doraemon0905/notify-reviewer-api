@@ -2,6 +2,7 @@ from fastapi import APIRouter, Form
 from app.serivces.send_message import SendMessage
 from app.serializers.conversation_response import ConversationResponse
 from fastapi.responses import JSONResponse
+from app.utils.sentry import capture_exception
 
 router = APIRouter()
 
@@ -28,6 +29,7 @@ async def conversation(
             text=":white_check_mark: Your request has been submitted successfully.",
         )
     except Exception as e:
+        capture_exception(e)
         return JSONResponse(
             status_code=400,
             content=ConversationResponse(
