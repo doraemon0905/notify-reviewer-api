@@ -14,7 +14,7 @@ class ReviewMessageDecorator:
             message_review += "\n"
 
         return (
-            f"Hi team, please help {'<@' + user_id + '> ' if user_id else ''}review this PR {pr_url} \n"
+            f"Hello team, please assist {'<@' + user_id + '> ' if user_id else ''}in reviewing this PR {pr_url} \n"
             f"Summary: {title} \n"
             f"{message_review}"
             "Thank you! :pepe_love:"
